@@ -696,7 +696,8 @@
       <li><a href="#tools">Expertise</a></li>
       <li><a href="#papers">Publications</a></li>
       <li><a href="#visualizations">Visualizations</a></li>
-      <li><a href="#pointgroups">Point Groups</a></li>
+            <li><a href="#pointgroups">Point Groups</a></li>
+      <li><a href="#bravais">Bravais Lattices</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
   </nav>
@@ -1028,6 +1029,27 @@
     </div>
   </section>
   <div class="divider"></div>
+    </section>
+  <div class="divider"></div>
+
+  <!-- BRAVAIS LATTICES -->
+  <section id="bravais">
+    <div class="section-tag">// 05.6 · crystallography</div>
+    <h2 class="section-title">Bravais Lattices & Brillouin Zones</h2>
+    <p style="font-size:14px; color:var(--text2); max-width:680px; line-height:1.8; margin-bottom:32px;">
+      Interactive 3D explorer of all 14 Bravais lattices with their first Brillouin zones and high-symmetry k-paths.
+    </p>
+
+    <!-- Bravais Explorer Container -->
+    <div id="bravais-app" style="background:var(--bg3); border:1px solid var(--border); border-radius:12px; overflow:hidden; position:relative;">
+      <!-- We will put the full Bravais HTML content here, but adapted -->
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CONTACT -->
+  <section id="contact">
   <!-- CONTACT -->
   <section id="contact">
     <div class="section-tag">// 06 · contact</div>
@@ -2047,6 +2069,215 @@ resize();
 new ResizeObserver(resize).observe(wrap);
 loadPg('2m');
 animate();
+</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const π = Math.PI;
+function v3(x,y,z){return new THREE.Vector3(x,y,z);}
+const SYSTEM_COLORS = {
+  Cubic: '#ff6d00', Tetragonal: '#7c4dff', Orthorhombic: '#00e676',
+  Monoclinic: '#4fc3f7', Triclinic: '#ffaa44', Trigonal: '#b39ddb', Hexagonal: '#ffb74d'
+};
+function reciprocal(a1,a2,a3){
+  const vol = a1.dot(new THREE.Vector3().crossVectors(a2,a3));
+  const b1 = new THREE.Vector3().crossVectors(a2,a3).multiplyScalar(2*π/vol);
+  const b2 = new THREE.Vector3().crossVectors(a3,a1).multiplyScalar(2*π/vol);
+  const b3 = new THREE.Vector3().crossVectors(a1,a2).multiplyScalar(2*π/vol);
+  return [b1,b2,b3];
+}
+function fracToCart(frac,b1,b2,b3){
+  return v3(
+    frac[0]*b1.x + frac[1]*b2.x + frac[2]*b3.x,
+    frac[0]*b1.y + frac[1]*b2.y + frac[2]*b3.y,
+    frac[0]*b1.z + frac[1]*b2.z + frac[2]*b3.z
+  );
+}
+const LATTICES = [
+  {name:'Simple Cubic', abbrev:'cP', system:'Cubic', a1:v3(1,0,0), a2:v3(0,1,0), a3:v3(0,0,1), kpoints:{ 'Γ':[0,0,0], 'X':[0.5,0,0], 'M':[0.5,0.5,0], 'R':[0.5,0.5,0.5] }, path:[['Γ','X','M','Γ','R','X'],['M','R']] },
+  {name:'Body-Centred Cubic', abbrev:'cI', system:'Cubic', a1:v3(-0.5,0.5,0.5), a2:v3(0.5,-0.5,0.5), a3:v3(0.5,0.5,-0.5), kpoints:{ 'Γ':[0,0,0], 'H':[0.5,-0.5,0.5], 'P':[0.25,0.25,0.25], 'N':[0,0,0.5] }, path:[['Γ','H','N','Γ','P','H'],['P','N']] },
+  {name:'Face-Centred Cubic', abbrev:'cF', system:'Cubic', a1:v3(0,0.5,0.5), a2:v3(0.5,0,0.5), a3:v3(0.5,0.5,0), kpoints:{ 'Γ':[0,0,0], 'X':[0.5,0,0.5], 'L':[0.5,0.5,0.5], 'W':[0.5,0.25,0.75], 'K':[0.375,0.375,0.75] }, path:[['Γ','X','W','K','Γ','L','W','L','K']] },
+  {name:'Simple Tetragonal', abbrev:'tP', system:'Tetragonal', a1:v3(1,0,0), a2:v3(0,1,0), a3:v3(0,0,1.5), kpoints:{ 'Γ':[0,0,0], 'X':[0.5,0,0], 'M':[0.5,0.5,0], 'Z':[0,0,0.5], 'R':[0.5,0,0.5], 'A':[0.5,0.5,0.5] }, path:[['Γ','X','M','Γ','Z','R','A','Z']] },
+  {name:'Simple Orthorhombic', abbrev:'oP', system:'Orthorhombic', a1:v3(1,0,0), a2:v3(0,1.3,0), a3:v3(0,0,1.7), kpoints:{ 'Γ':[0,0,0], 'X':[0.5,0,0], 'Y':[0,0.5,0], 'Z':[0,0,0.5], 'S':[0.5,0.5,0], 'R':[0.5,0.5,0.5] }, path:[['Γ','X','S','Y','Γ','Z','R']] },
+  {name:'Simple Monoclinic', abbrev:'mP', system:'Monoclinic', a1:v3(1,0,0), a2:v3(0,1.2,0), a3:v3(-0.51,0,1.41), kpoints:{ 'Γ':[0,0,0], 'Y':[0.5,0,0], 'H':[0,0.5,0], 'Z':[0,0,0.5], 'M':[0.5,0.5,0.5] }, path:[['Γ','Y','H','A','Γ','Z','M']] },
+  {name:'Simple Hexagonal', abbrev:'hP', system:'Hexagonal', a1:v3(1,0,0), a2:v3(-0.5,0.866,0), a3:v3(0,0,1.6), kpoints:{ 'Γ':[0,0,0], 'M':[0.5,0,0], 'K':[0.333,0.333,0], 'A':[0,0,0.5], 'L':[0.5,0,0.5], 'H':[0.333,0.333,0.5] }, path:[['Γ','M','K','Γ','A','L','H','A']] },
+  {name:'Simple Triclinic', abbrev:'aP', system:'Triclinic', a1:v3(1,0,0), a2:v3(-0.174,1.085,0), a3:v3(-0.174,-0.234,1.27), kpoints:{ 'Γ':[0,0,0], 'X':[0.5,0,0], 'Y':[0,0.5,0], 'Z':[0.5,0.5,0], 'R':[0.5,0.5,0.5] }, path:[['Γ','X','Y','Z','Γ','R']] }
+];
+
+const canvas = document.getElementById('bravais-canvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a1020, 1);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+camera.position.set(4, 3, 5);
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const dlight = new THREE.DirectionalLight(0xffffff, 0.6);
+dlight.position.set(5,8,5);
+scene.add(dlight);
+
+let currentLatticeIdx = 0;
+let autoRotate = false;
+let showFaces = true;
+let currentMesh = null;
+
+function resize(){
+  const w = canvas.parentElement.clientWidth;
+  const h = canvas.parentElement.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+function buildBZ(lat){
+  const [b1,b2,b3] = reciprocal(lat.a1, lat.a2, lat.a3);
+  const pts = [];
+  for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++) for(let k=-2;k<=2;k++){
+    pts.push(new THREE.Vector3().addScaledVector(b1,i).addScaledVector(b2,j).addScaledVector(b3,k));
+  }
+  const nn = pts.filter(p=>p.length()>0.01).sort((a,b)=>a.length()-b.length()).slice(0,26);
+  const vertices = [];
+  for(let i=0;i<nn.length;i++)
+  for(let j=i+1;j<nn.length;j++)
+  for(let k=j+1;k<nn.length;k++){
+    const v = intersectThreePlanes(nn[i],nn[j],nn[k]);
+    if(!v) continue;
+    let inside = true;
+    for(const p of nn){
+      if(v.dot(p) > p.dot(p)/2 + 1e-5){ inside=false; break; }
+    }
+    if(inside) vertices.push(v);
+  }
+  return vertices.length > 3 ? {vertices, b1, b2, b3} : null;
+}
+
+function intersectThreePlanes(n1,n2,n3){
+  const A = [[n1.x,n1.y,n1.z],[n2.x,n2.y,n2.z],[n3.x,n3.y,n3.z]];
+  const b = [n1.dot(n1)/2, n2.dot(n2)/2, n3.dot(n3)/2];
+  const det = A[0][0]*(A[1][1]*A[2][2]-A[1][2]*A[2][1]) - A[0][1]*(A[1][0]*A[2][2]-A[1][2]*A[2][0]) + A[0][2]*(A[1][0]*A[2][1]-A[1][1]*A[2][0]);
+  if(Math.abs(det)<1e-10) return null;
+  const x = (b[0]*(A[1][1]*A[2][2]-A[1][2]*A[2][1]) - A[0][1]*(b[1]*A[2][2]-A[1][2]*b[2]) + A[0][2]*(b[1]*A[2][1]-A[1][1]*b[2])) / det;
+  const y = (A[0][0]*(b[1]*A[2][2]-A[1][2]*b[2]) - b[0]*(A[1][0]*A[2][2]-A[1][2]*A[2][0]) + A[0][2]*(A[1][0]*b[2]-b[1]*A[2][0])) / det;
+  const z = (A[0][0]*(A[1][1]*b[2]-b[1]*A[2][1]) - A[0][1]*(A[1][0]*b[2]-b[1]*A[2][0]) + b[0]*(A[1][0]*A[2][1]-A[1][1]*A[2][0])) / det;
+  return new THREE.Vector3(x,y,z);
+}
+
+function loadBravaisLattice(idx){
+  currentLatticeIdx = idx;
+  const lat = LATTICES[idx];
+  const color = SYSTEM_COLORS[lat.system] || '#4fc3f7';
+  const colorHex = parseInt(color.replace('#',''),16);
+
+  scene.children.filter(c => !c.isLight).forEach(c => scene.remove(c));
+
+  const bz = buildBZ(lat);
+  if(!bz) return;
+  const {vertices, b1, b2, b3} = bz;
+  const maxR = Math.max(...vertices.map(v=>v.length())) || 1;
+  const scale = 1.4 / maxR;
+  const verts = vertices.map(v => v.clone().multiplyScalar(scale));
+
+  // Edges
+  const edgeMat = new THREE.LineBasicMaterial({color: colorHex, linewidth: 2, transparent:true, opacity:0.85});
+  for(let i=0; i<verts.length; i++){
+    for(let j=i+1; j<verts.length; j++){
+      if(verts[i].distanceTo(verts[j]) < 1.8){
+        const geo = new THREE.BufferGeometry().setFromPoints([verts[i], verts[j]]);
+        scene.add(new THREE.Line(geo, edgeMat));
+      }
+    }
+  }
+
+  // Faces
+  if(showFaces){
+    const faceMat = new THREE.MeshBasicMaterial({color: colorHex, transparent:true, opacity:0.08, side:THREE.DoubleSide});
+    // simple fan from center for visualization
+    const center = new THREE.Vector3();
+    verts.forEach(v => center.add(v));
+    center.divideScalar(verts.length || 1);
+    for(let i=0; i<verts.length; i++){
+      const a = verts[i];
+      const b = verts[(i+1)%verts.length];
+      const geo = new THREE.BufferGeometry().setFromPoints([center, a, b]);
+      scene.add(new THREE.Mesh(geo, faceMat));
+    }
+  }
+
+  // k-points
+  const [b1s,b2s,b3s] = [b1,b2,b3].map(b => b.clone().multiplyScalar(scale));
+  for(const [label, frac] of Object.entries(lat.kpoints)){
+    const pt = fracToCart(frac, b1s, b2s, b3s);
+    const isGamma = label === 'Γ';
+    const sGeo = new THREE.SphereGeometry(isGamma ? 0.04 : 0.025, 16, 16);
+    const sMat = new THREE.MeshBasicMaterial({color: isGamma ? 0xe8edf5 : colorHex});
+    const sphere = new THREE.Mesh(sGeo, sMat);
+    sphere.position.copy(pt);
+    scene.add(sphere);
+  }
+
+  updateBravaisInfo(lat);
+}
+
+function updateBravaisInfo(lat){
+  const overlay = document.getElementById('bravais-info');
+  let html = `<div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">${lat.name}</div>`;
+  html += `<div style="font-family:var(--mono);font-size:12px;color:var(--accent);margin-bottom:12px;">${lat.abbrev} — ${lat.system}</div>`;
+  html += `<div style="font-size:11px;color:var(--text2);">High-symmetry points: ${Object.keys(lat.kpoints).join(', ')}</div>`;
+  overlay.innerHTML = html;
+}
+
+function toggleAutoRotateBravais(){
+  autoRotate = !autoRotate;
+  const btn = document.getElementById('btn-bravais-rotate');
+  if(btn) btn.style.color = autoRotate ? 'var(--accent)' : '';
+}
+
+function resetBravaisView(){
+  camera.position.set(4, 3, 5);
+  camera.lookAt(0,0,0);
+}
+
+function animateBravais(){
+  requestAnimationFrame(animateBravais);
+  if(autoRotate){
+    camera.position.x = 5 * Math.sin(Date.now()/2000);
+    camera.position.z = 5 * Math.cos(Date.now()/2000);
+    camera.lookAt(0,0,0);
+  }
+  renderer.render(scene, camera);
+}
+
+// Sidebar
+function buildBravaisSidebar(){
+  const sidebar = document.getElementById('bravais-sidebar');
+  sidebar.innerHTML = '';
+  LATTICES.forEach((lat, idx) => {
+    const btn = document.createElement('div');
+    btn.style.cssText = `padding:9px 12px; margin:3px 0; border-radius:6px; cursor:pointer; transition:all 0.2s; font-size:12.5px; ${idx===0 ? 'background:var(--bg2); border:1px solid var(--border);' : 'background:transparent;'}`;
+    btn.innerHTML = `<span style="color:${SYSTEM_COLORS[lat.system]||'#4fc3f7'}">●</span> ${lat.name} <span style="font-family:var(--mono);font-size:10px;color:var(--text2);float:right;">${lat.abbrev}</span>`;
+    btn.onclick = () => {
+      loadBravaisLattice(idx);
+      document.querySelectorAll('#bravais-sidebar > div').forEach(d => d.style.background = 'transparent');
+      btn.style.background = 'var(--bg2)';
+    };
+    sidebar.appendChild(btn);
+  });
+}
+
+// System pills
+document.getElementById('sysPills').addEventListener('click', e => {
+  const pill = e.target.closest('.pill');
+  if(!pill) return;
+  document.querySelectorAll('#sysPills .pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  // For simplicity we keep all lattices (filter can be added later)
+});
+
+// Init
+buildBravaisSidebar();
+loadBravaisLattice(0);
+animateBravais();
 </script>
 </body>
 </html>
