@@ -6,7 +6,7 @@
 <title>Arafat Rahman — Physicist</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lobster&family=Playfair+Display:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#070c18;
@@ -305,21 +305,45 @@ section:first-of-type{padding-top:110px;}
   opacity:0.75;display:flex;align-items:center;gap:14px;
 }
 .hero-label::before{content:'';display:block;width:36px;height:1px;background:var(--accent2);opacity:0.7;}
-.hero-name{
-  font-family:'Lobster', cursive;
-  font-size:clamp(54px,8vw,88px);
-  font-weight:500;
-  letter-spacing:0.01em;
-  margin-bottom:10px;
-}
 
+
+.hero-name{
+  font-family:'Sora', var(--sans);
+  font-size:clamp(40px, 7vw, 70px);
+  font-weight:600;
+  letter-spacing:-0.02em;
+  font-style:italic;
+  color:var(--text);
+
+  line-height:1.15;   
+  padding-top:8px;   
+}
+.hero-name{
+  text-shadow:
+    0 0 10px rgba(0,255,200,0.25),
+    0 0 25px rgba(0,200,255,0.18),
+    0 0 40px rgba(255,255,255,0.08);
+}
+.hero-name{
+  overflow:visible;
+}
 .hero-name-italic{
-  font-style:normal;
-  background:linear-gradient(130deg,#e0eaff 0%, #7aa2ff 42%, #c8a8ff 70%, #ff9fb0 100%);
+  font-style:italic;
+  background:linear-gradient(135deg,
+    #e0f7ff 0%,     /* soft white-blue */
+    #7ee8fa 25%,    /* aqua */
+    #00f2fe 50%,    /* cyan */
+    #00ffcc 75%,    /* neon green */
+    #ffffff 100%    /* clean white highlight */
+  );
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   background-clip:text;
 }
+.hero-name-white{
+  color:var(--text);
+}
+
 .hero-title{
   font-family:var(--mono);font-size:13px;color:var(--text2);
   margin-bottom:28px;font-weight:300;letter-spacing:0.12em;
@@ -724,8 +748,11 @@ footer{
 <section id="hero">
   <div class="hero-inner">
     <div class="hero-label">Physicist · Computational Materials Scientist</div>
-    <h1 class="hero-name"><span class="hero-name-italic">Arafat</span> Rahman</h1>
-    <div class="hero-title">MSc Physics &nbsp;·&nbsp; University of Dhaka &nbsp;·&nbsp; Bangladesh</div>
+    <h1 class="hero-name">
+  <span class="hero-name-italic">Arafat</span>
+  <span class="hero-name-white">Rahman</span>
+</h1>
+<div class="hero-title">MSc Physics &nbsp;·&nbsp; University of Dhaka &nbsp;·&nbsp; Bangladesh</div>
     <p class="hero-desc">An aspiring condensed matter physicist exploring topological quantum materials through density functional theory, with a focus on symmetry, band topology, and the role of magnetism in emergent quantum states.</p>
     <div class="hero-badges">
       <span class="badge badge-blue">Topological Insulators</span>
